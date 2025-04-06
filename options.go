@@ -6,7 +6,7 @@ type tokenOption struct {
 
 // apply implements option.
 func (t *tokenOption) apply(opkl *opklReader) {
-	opkl.opToken = ""
+	opkl.opToken = t.token
 }
 
 // Configures the 1Password token used when reading a secret
