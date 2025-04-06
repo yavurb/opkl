@@ -1,18 +1,49 @@
+name: git-release
 on:
   push:
     branches:
-      - main
-
-permissions:
-  contents: write
-  pull-requests: write
-
-name: release-please
+      - release/*
 
 jobs:
-  release-please:
+  changelog:
+    name: Generate changelog
     runs-on: ubuntu-latest
+    outputs:
+      release_changelog: ${{ steps.git-cliff.outputs.content }}
+      release_version: ${{ steps.git-cliff.outputs.version }}
     steps:
-      - uses: googleapis/release-please-action@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          release-type: simple
+          fetch-depth: 0
+
+      - name: Get release type
+        id: release-type
+        env:
+          MESSAGE: "${{ github.event.head_commit.message }}"
+        run: |
+          echo "type=$(./scripts/releasetype.sh)" >> $GITHUB_OUTPUT
+
+      - name: Generate a changelog
+        uses: orhun/git-cliff-action@v4
+        id: git-cliff
+        with:
+          config: cliff.toml
+          args: --verbose --unreleased --bump ${{ steps.release-type.outputs.type }}
+        env:
+          OUTPUT: CHANGELOG.md
+
+  release:
+    name: Publish release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    needs: changelog
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          tag: ${{ needs.changelog.outputs.release_version }}
+          body: ${{ needs.changelog.outputs.release_changelog }}
