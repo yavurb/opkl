@@ -32,8 +32,11 @@ func (o *opklReader) ListElements(url url.URL) ([]pkl.PathElement, error) {
 }
 
 // Read implements pkl.ResourceReader.
-func (o *opklReader) Read(url url.URL) ([]byte, error) {
-	opReference := url.String()
+func (o *opklReader) Read(resourceUrl url.URL) ([]byte, error) {
+	opReference, err := url.QueryUnescape(resourceUrl.String())
+	if err != nil {
+		return nil, fmt.Errorf("error unescaping secret reference %s: %w", opReference, err)
+	}
 
 	secret, err := o.opClient.Secrets().Resolve(context.Background(), opReference)
 	if err != nil {
