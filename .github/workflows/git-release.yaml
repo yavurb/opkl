@@ -17,19 +17,17 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get release type
-        id: release-type
-        env:
-          MESSAGE: "${{ github.event.head_commit.message }}"
+      - name: Get release version
+        id: release-version
         run: |
-          echo "type=$(./scripts/releasetype.sh)" >> $GITHUB_OUTPUT
+          echo "version=$( echo '${{ github.ref_name }}' | sed 's|release/||' )" >> $GITHUB_OUTPUT
 
       - name: Generate a changelog
         uses: orhun/git-cliff-action@v4
         id: git-cliff
         with:
           config: cliff.toml
-          args: --verbose --unreleased --bump ${{ steps.release-type.outputs.type }}
+          args: --verbose --unreleased --tag ${{ steps.release-version.outputs.version }}
         env:
           OUTPUT: CHANGELOG.md
 
