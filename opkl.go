@@ -2,6 +2,7 @@ package opkl
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"net/url"
@@ -33,7 +34,13 @@ func (o *opklReader) ListElements(url url.URL) ([]pkl.PathElement, error) {
 
 // Read implements pkl.ResourceReader.
 func (o *opklReader) Read(resourceUrl url.URL) ([]byte, error) {
-	opReference, err := url.QueryUnescape(resourceUrl.String())
+	strReference := resourceUrl.String()
+
+	if b, err := base64.StdEncoding.DecodeString(strReference); err == nil {
+		strReference = string(b)
+	}
+
+	opReference, err := url.QueryUnescape(strReference)
 	if err != nil {
 		return nil, fmt.Errorf("error unescaping secret reference %s: %w", opReference, err)
 	}
