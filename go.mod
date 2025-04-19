@@ -2,10 +2,12 @@ module github.com/yavurb/opkl
 
 go 1.24.2
 
-require github.com/apple/pkl-go v0.10.0
+require (
+	github.com/1password/onepassword-sdk-go v0.2.1
+	github.com/apple/pkl-go v0.10.0
+)
 
 require (
-	github.com/1password/onepassword-sdk-go v0.2.1 // indirect
 	github.com/dylibso/observe-sdk/go v0.0.0-20240819160327-2d926c5d788a // indirect
 	github.com/extism/go-sdk v1.7.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
