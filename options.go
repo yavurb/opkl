@@ -1,17 +1,10 @@
 package opkl
 
-type tokenOption struct {
-	token string
-}
-
-// apply implements option.
-func (t *tokenOption) apply(opkl *opklReader) {
-	opkl.opToken = t.token
-}
-
 // Configures the 1Password token used when reading a secret
 func WithToken(token string) option {
-	return &tokenOption{
-		token: token,
+	return func(opkl *opklReader) error {
+		opkl.opToken = token
+
+		return nil
 	}
 }

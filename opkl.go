@@ -58,15 +58,16 @@ func (o *opklReader) Scheme() string {
 	return "op"
 }
 
-type option interface {
-	apply(opkl *opklReader)
-}
+type option func(*opklReader) error
 
 func New(options ...option) (pkl.ResourceReader, error) {
 	opkl := &opklReader{}
 
 	for _, option := range options {
-		option.apply(opkl)
+		err := option(opkl)
+		if err != nil {
+			return nil, fmt.Errorf("error applying option: %w", err)
+		}
 	}
 
 	if opkl.opToken == "" {
