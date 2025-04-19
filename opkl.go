@@ -3,18 +3,15 @@ package opkl
 import (
 	"context"
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"net/url"
-	"os"
 
-	"github.com/1password/onepassword-sdk-go"
 	"github.com/apple/pkl-go/pkl"
 )
 
 type opklReader struct {
 	opToken  string
-	opClient *onepassword.Client
+	opClient Client
 }
 
 // HasHierarchicalUris implements pkl.ResourceReader.
@@ -45,7 +42,8 @@ func (o *opklReader) Read(resourceUrl url.URL) ([]byte, error) {
 		return nil, fmt.Errorf("error unescaping secret reference %s: %w", opReference, err)
 	}
 
-	secret, err := o.opClient.Secrets().Resolve(context.Background(), opReference)
+	// secret, err := o.opClient.Secrets().Resolve(context.Background(), opReference)
+	secret, err := o.opClient.ReadSecret(context.Background(), opReference)
 	if err != nil {
 		return nil, fmt.Errorf("error resolving secret reference %s: %w", opReference, err)
 	}
@@ -58,8 +56,6 @@ func (o *opklReader) Scheme() string {
 	return "op"
 }
 
-type option func(*opklReader) error
-
 func New(options ...option) (pkl.ResourceReader, error) {
 	opkl := &opklReader{}
 
@@ -69,29 +65,6 @@ func New(options ...option) (pkl.ResourceReader, error) {
 			return nil, fmt.Errorf("error applying option: %w", err)
 		}
 	}
-
-	if opkl.opToken == "" {
-		token, ok := os.LookupEnv("OP_SERVICE_ACCOUNT_TOKEN")
-		if !ok {
-			return nil, errors.New("1Password service account token not defined. Set the env OP_SERVICE_ACCOUNT_TOKEN")
-		}
-
-		opkl.opToken = token
-	}
-
-	client, err := onepassword.NewClient(
-		context.Background(),
-		onepassword.WithServiceAccountToken(opkl.opToken),
-		onepassword.WithIntegrationInfo(
-			onepassword.DefaultIntegrationName,
-			onepassword.DefaultIntegrationVersion,
-		),
-	)
-	if err != nil {
-		return nil, fmt.Errorf("error initializing 1password client: %w", err)
-	}
-
-	opkl.opClient = client
 
 	return opkl, nil
 }
