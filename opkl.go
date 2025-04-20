@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/url"
+	"strings"
 
 	"github.com/apple/pkl-go/pkl"
 )
@@ -33,8 +34,9 @@ func (o *opklReader) ListElements(url url.URL) ([]pkl.PathElement, error) {
 func (o *opklReader) Read(resourceUrl url.URL) ([]byte, error) {
 	strReference := resourceUrl.String()
 
-	if b, err := base64.StdEncoding.DecodeString(strReference); err == nil {
-		strReference = string(b)
+	if b, err := base64.StdEncoding.DecodeString(strings.Split(strReference, ":")[1]); err == nil {
+		strReference = fmt.Sprintf("%s:%s", resourceUrl.Scheme, string(b))
+		strReference = strings.Trim(strReference, " \n")
 	}
 
 	opReference, err := url.QueryUnescape(strReference)
